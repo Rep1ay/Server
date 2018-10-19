@@ -4,7 +4,6 @@ const User = require('../models/user')
 const Discount = require('../models/discounts')
 const Template = require('../models/templates')
 const mongoose = require('mongoose')
-const db = 'mongodb://antwerk:antwerk18@ds040309.mlab.com:40309/antwerkdb'
 const jwt = require('jsonwebtoken')
 const pretty = require('pretty');
 mongoose.set('useFindAndModify', false);
