@@ -2,7 +2,8 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const Discount = require('../models/discounts')
-const Template = require('../models/templates')
+const TemplateRu = require('../models/templates_ru')
+const TemplateEn = require('../models/templates_en')
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const pretty = require('pretty');
@@ -58,11 +59,13 @@ router.post('/register', (req, res) => {
     })
 })
 
-router.get('/templates', (res, req) => {
+//  =================  en templates ===================
+
+router.get('/templates_en', (res, req) => {
     // let templateData = res.body.template
     let title = res.headers.pagetitle
 
-    Template.findOne({'pageTitle': title}, (err, template) => {
+    TemplateEn.findOne({'pageTitle': title}, (err, template) => {
         if(err){
             return res.status(500).send(err)
         }else{
@@ -71,16 +74,16 @@ router.get('/templates', (res, req) => {
     })
 })
 
-router.put('/templates', (res, req) => {
+router.put('/templates_en', (res, req) => {
     let templateData = res.body.template;
     let title = res.body.pageTitle 
-    let templateObj = new Template(res.body)
+    let templateObj = new TemplateEn(res.body)
     let opts = {
         upsert: true,
         new: true
       };
 
-    Template.findOneAndUpdate({ pageTitle : title },
+      TemplateEn.findOneAndUpdate({ pageTitle : title },
     { $set: { template : templateData } }, opts, function(err, template){
         if(err){
             console.log("Something wrong when updating data!"+ '</br>' + err);
@@ -89,76 +92,45 @@ router.put('/templates', (res, req) => {
         }
     });
 })
-    // Template.findOneAndUpdate({'pageTitle': title},{$set:{'template':templateData}},opts)   
-    // .then((docs)=>{
-    //     if(docs) {
-    //        resolve({success:true,template:docs});
-    //     } else {
-    //     //    reject({success:false,data:"no such user exist"});
-    //     console.log('error');
-    //     }
-    // }).catch((err)=>{
-    // //    reject(err);
-    // console.log(err);
-    // })
-    // Template.findOneAndReplace({'pageTitle': title},{'template': templateData}, (error, template) => {
-    //     if(error) {
-    //         console.log(error);
-    //     }else {
-    //         if(!template){
-                
-    //             templateObj.save((error, savedTemplate) => {
-    //                 if(error) {
-    //                     console.log(error);
-    //                 }else {
-    //                     console.log( savedTemplate);
-    //                     // templateObj.remove({pageTitle: title})
-    //                     res.status(200).send(savedTemplate)
-    //                 }
-    //             })
-    //         }
-    //         else{
-    //             templateObj.save((err, template) => {
-    //                 if(err){
-    //                     console.log(err);
-    //                 }else{
-    //                     Template.remove({pageTitle: title})
-    //                     // res.status(200).send(template)
-    //                 }
-    //             })
-    //             // res.status(200).send({templateData})
-                
-    //             // Template.remove({'pageTitle': title res.status(200).send(req.body)
-    //         }
-           
-    //     }
-    // })
 
-    // try {
-    //    Template.findOneAndUpdate(
-    //     {pageTitle: title},{template: templateData}
-    //     );
-    //  }
-    //  catch(e){
-    //     console.log(e);
-    //  }
-    
-
-        // Template.update(
-        //     {'pageTitle': title}, {$set: {pages:2}}
-        //     // { pageTitle : pageTitle },
-        //     // { $set: { template : templateData } }
-        //     // pageTitle, { template: templateData }, (err, res) =>{
-        //     //     if(err){
-        //     //         console.log(err);
-        //     //     }
-        //     //     else{
-        //     //         console.log(res);
-        //     //     }
-        //     // }
-        // )
+//  =============  end eng templates ===================
 
 
+//  =======================  ru templates ===================
+
+router.get('/templates_ru', (res, req) => {
+    // let templateData = res.body.template
+    let title = res.headers.pagetitle
+
+    TemplateRu.findOne({'pageTitle': title}, (err, template) => {
+        if(err){
+            return res.status(500).send(err)
+        }else{
+            res.res.status(200).send(template)
+        }
+    })
+})
+
+router.put('/templates_ru', (res, req) => {
+    let templateData = res.body.template;
+    let title = res.body.pageTitle 
+    let templateObj = new TemplateRu(res.body)
+    let opts = {
+        upsert: true,
+        new: true
+      };
+
+      TemplateRu.findOneAndUpdate({ pageTitle : title },
+    { $set: { template : templateData } }, opts, function(err, template){
+        if(err){
+            console.log("Something wrong when updating data!"+ '</br>' + err);
+        }else{
+            res.res.status(200).send(template)
+        }
+    });
+})
+
+// ============== end ru =================
 
 router.post('/login', (req, res) => {
     let userData = req.body;
@@ -198,22 +170,5 @@ router.post('/discounts', (req, res) => {
     })
  })
 
-
-//  router.post('/templates', (req, res) => {
-//     let templateData = req.body;
-   
- 
-    
-//     let template = new Template(templateData)
-   
-//     template.save((error, savedTemplate) => {
-//         if(error) {
-//             console.log(error);
-//         }else {
-//             console.log( savedTemplate);
-//             res.status(200).send(savedTemplate)
-//         }
-//     })
-//  })
 
 module.exports = router
