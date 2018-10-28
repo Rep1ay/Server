@@ -10,7 +10,6 @@ const jwt = require('jsonwebtoken')
 const pretty = require('pretty');
 mongoose.set('useFindAndModify', false);
 
-
 mongoose.connect(db,{useNewUrlParser:true})
     .then(() => {
         console.log('start api.js')
@@ -56,7 +55,6 @@ router.post('/register', (req, res) => {
 
 router.get('/templates', (res, req) => {
     // let templateData = res.body.template
-    console.log('get template method');
     let title = res.headers.pagetitle
     let prefix = res.headers.prefix;
 
@@ -70,7 +68,6 @@ router.get('/templates', (res, req) => {
 })
 
 router.put('/templates', (res, req) => {
-    console.log('put template method');
     let templateData = res.body.body.template;
     let prefix = res.body.body.prefix;
     let title = res.body.body.pageTitle 
@@ -101,31 +98,7 @@ router.get('/lang_panel', (req, res) => {
         (err) => {
             return res.status(500).send(err)
         }
-    );
-            // db.Language.find(
-            //     // {
-            //         res.status(200).send()
-            //     // }
-               
-            // );
-    // let opts = {
-    //     upsert: true,
-    //     new: true
-    //   };
-
-    // Language.findOneAndUpdate({
-    //     prefix: prefix
-    // },
-    // { $set: { language: prefix } }, opts, function(err, lang){
-    //     if(err){
-    //         console.log('Somthing went wrong wuth language' + '</br>' + err);
-    //     }else{
-    //         res.res.status(200).send(lang)
-    //     }
-    // }
-    // )
-
-    
+    );    
 })
 
 router.put('/lang_panel', (req, res) => {
