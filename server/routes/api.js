@@ -4,6 +4,7 @@ const User = require('../models/user')
 const Discount = require('../models/discounts')
 const Language = require('../models/language')
 const Template = require('../models/templates')
+const Permalink = require('../models/permalinks')
 const mongoose = require('mongoose')
 const db = 'mongodb://antwerk:antwerk18@ds040309.mlab.com:40309/antwerkdb'
 const jwt = require('jsonwebtoken')
@@ -18,38 +19,45 @@ mongoose.connect(db,{useNewUrlParser:true})
         console.log('Error on start: ' + err);
     })
 
-function verifyToken(req, res, next){
-    if (!req.headers.autorization) {
-        return res.status(401).send('Unauthorized request');
-    }
-    let token = req.headers.autorization.split(' ')[1];
-    if (token === 'null'){
-        return res.status(401).send('Unauthorized request');
-    }
-    let payload = jwt.verify(token, 'secretKey');
-    if(!payload){
-        return res.status(401).send('Unauthorized request');
-    }
-    req.userId = payload.subject
-    next()
-}
+
 
 router.get('/', (req, res) => {
     res.send('From API route')
 })
 
-router.post('/register', (req, res) => {
-    let userData = req.body;
-    let user = new User(userData)
-    user.save((error, registeredUser) => {
-        if(error) {
-            console.log(error)
+router.get('/permalink', (res, req) => {
+    // let templateData = res.body.template
+    let title = res.headers.pagetitle
+
+    Permalink.findOne({'pageTitle': title}, (err, permalink) => {
+        if(err){
+            return res.status(500).send(err)
         }else{
-            let payload = { subject: registeredUser._id }
-            let token = jwt.sign(payload, 'secretKey')
-            res.status(200).send({token})
+            res.res.status(200).send(permalink)
         }
     })
+})
+
+
+router.put('/permalink', (res, req) => {
+    let title = res.body.pageTitle 
+    let permalink =  res.body.permalink 
+
+    let opts = {
+        upsert: true,
+        new: true
+      };
+
+    Permalink.findOneAndUpdate({
+        pageTitle : title
+    },
+    { $set: { permalink : permalink } }, opts, function(err, permalink){
+        if(err){
+            console.log("Something wrong when updating data!"+ '</br>' + err);
+        }else{
+            res.res.status(200).send(permalink)
+        }
+    });
 })
 
 
@@ -71,6 +79,7 @@ router.put('/templates', (res, req) => {
     let templateData = res.body.body.template;
     let prefix = res.body.body.prefix;
     let title = res.body.body.pageTitle 
+    let permalink =  res.body.body.permalink 
     let templateObj = new Template(res.body)
     let opts = {
         upsert: true,
@@ -79,6 +88,7 @@ router.put('/templates', (res, req) => {
 
     Template.findOneAndUpdate({
         prefix: prefix,
+        permalink: permalink,
         pageTitle : title
     },
     { $set: { template : templateData } }, opts, function(err, template){
@@ -144,9 +154,35 @@ router.post('/login', (req, res) => {
     })
 })
 
+router.post('/register', (req, res) => {
+    let userData = req.body;
+    let user = new User(userData)
+    user.save((error, registeredUser) => {
+        if(error) {
+            console.log(error)
+        }else{
+            let payload = { subject: registeredUser._id }
+            let token = jwt.sign(payload, 'secretKey')
+            res.status(200).send({token})
+        }
+    })
+})
 
-
-
+function verifyToken(req, res, next){
+    if (!req.headers.autorization) {
+        return res.status(401).send('Unauthorized request');
+    }
+    let token = req.headers.autorization.split(' ')[1];
+    if (token === 'null'){
+        return res.status(401).send('Unauthorized request');
+    }
+    let payload = jwt.verify(token, 'secretKey');
+    if(!payload){
+        return res.status(401).send('Unauthorized request');
+    }
+    req.userId = payload.subject
+    next()
+}
 // router.post('/discounts', (req, res) => { 
 //     let discountData = req.body;
 
