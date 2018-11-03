@@ -25,6 +25,18 @@ router.get('/', (req, res) => {
     res.send('From API route')
 })
 
+router.get('/pageTitle', (res, req) => {
+    let permalink = res.headers.permalink
+
+    Permalink.findOne({'permalink': permalink}, (err, pageTitle) => {
+        if(err){
+            return res.status(500).send(err)
+        }else{
+             res.res.status(200).send(pageTitle)
+        }
+    })
+})
+
 router.get('/permalink', (res, req) => {
     // let templateData = res.body.template
     let title = res.headers.pagetitle
@@ -88,7 +100,6 @@ router.put('/templates', (res, req) => {
 
     Template.findOneAndUpdate({
         prefix: prefix,
-        permalink: permalink,
         pageTitle : title
     },
     { $set: { template : templateData } }, opts, function(err, template){
