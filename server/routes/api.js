@@ -6,7 +6,7 @@ const Language = require('../models/language')
 const Template = require('../models/templates')
 const Permalink = require('../models/permalinks')
 const mongoose = require('mongoose')
-const db = 'mongodb://antwerk:antwerk18@ds040309.mlab.com:40309/antwerkdb'
+
 const jwt = require('jsonwebtoken')
 const pretty = require('pretty');
 mongoose.set('useFindAndModify', false);
