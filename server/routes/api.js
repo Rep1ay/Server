@@ -5,6 +5,7 @@ const Discount = require('../models/discounts')
 const Language = require('../models/language')
 const Template = require('../models/templates')
 const Permalink = require('../models/permalinks')
+const Lang_list = require('../models/lang_list')
 const mongoose = require('mongoose')
 
 const jwt = require('jsonwebtoken')
@@ -19,10 +20,19 @@ mongoose.connect(db,{useNewUrlParser:true})
         console.log('Error on start: ' + err);
     })
 
-
-
 router.get('/', (req, res) => {
     res.send('From API route')
+})
+
+router.get('/lang_list', (req, res) => {
+    // let prefix = req.body.prefix
+    Lang_list.find({},(err, lang_list) => {
+            res.status(200).send(lang_list)
+        },
+        (err) => {
+            return res.status(500).send(err)
+        }
+    )   
 })
 
 router.get('/pageTitle', (res, req) => {
@@ -119,28 +129,29 @@ router.get('/lang_panel', (req, res) => {
         (err) => {
             return res.status(500).send(err)
         }
-    );    
+    )   
 })
 
 router.put('/lang_panel', (req, res) => {
     let prefix = req.body.prefix
+    if(prefix){
+        let opts = {
+            upsert: true,
+            new: true
+        };
 
-    let opts = {
-        upsert: true,
-        new: true
-      };
-
-    Language.findOneAndUpdate({
-        prefix: prefix
-    },
-    { $set: { language: prefix } }, opts, function(err, lang){
-        if(err){
-            console.log('Somthing went wrong wuth language' + '</br>' + err);
-        }else{
-            res.status(200).send(lang)
+        Language.findOneAndUpdate({
+            prefix: prefix
+        },
+        { $set: { language: prefix } }, opts, function(err, lang){
+            if(err){
+                console.log('Somthing went wrong wuth language' + '</br>' + err);
+            }else{
+                res.status(200).send(lang)
+            }
         }
+        )
     }
-    )
 })
 
 router.post('/login', (req, res) => {
