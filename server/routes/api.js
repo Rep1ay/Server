@@ -2,11 +2,16 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const Discount = require('../models/discounts')
+const Navbar = require('../models/navbar')
 const Language = require('../models/language')
 const Template = require('../models/templates')
 const Permalink = require('../models/permalinks')
 const Lang_list = require('../models/lang_list')
+const NewsCollection = require('../models/news')
+const ArticlesCollection = require('../models/articles')
+
 const mongoose = require('mongoose')
+const db = 'mongodb://antwerk:antwerk18@ds040309.mlab.com:40309/antwerkdb'
 
 const jwt = require('jsonwebtoken')
 const pretty = require('pretty');
@@ -23,6 +28,68 @@ mongoose.connect(db,{useNewUrlParser:true})
 router.get('/', (req, res) => {
     res.send('From API route')
 })
+
+router.get('/article', (req, res) => {
+    let lang = req.headers.prefix;
+    let id = req.headers.id;
+
+    NewsCollection.findOne({'prefix': lang, 'id': id}, (err, template) => {
+        if(err){
+            return res.status(500).send(err)
+        }else{
+             res.status(200).send(template)
+        }
+    })
+})
+
+router.put('/article', (req, res) => {
+    let lang = req.body.body.prefix;
+    let id = req.body.body.id;
+    let template = req.body.body.template;    
+
+    let opts = {
+        upsert: true,
+        new: true
+      };
+
+      ArticlesCollection.findOneAndUpdate({
+        'prefix': lang,
+        'id': id
+    },
+    { $set: { template : template } }, opts, function(err, template){
+        if(err){
+            console.log("Something wrong when updating data!"+ '</br>' + err);
+        }else{
+            res.status(200).send(template)
+        }
+    });
+})
+
+router.get('/news', (req, res) => {
+    let prefix = req.headers.prefix
+    
+    NewsCollection.find({'prefix': prefix},(err, news_collection) => {
+        res.status(200).send(news_collection)
+        },
+        (err) => {
+            return res.status(500).send(err)
+        }
+    )  
+})
+
+router.get('/navbar', (req, res) => {
+    let lang = req.headers.lang
+
+    Navbar.findOne({'lang': lang}, (err, navbar) => {
+        if(err){
+            return res.status(500).send(err)
+        }else{
+             res.status(200).send(navbar)
+        }
+    })
+})
+
+//  Place for navbar put
 
 router.get('/lang_list', (req, res) => {
     // let prefix = req.body.prefix
@@ -86,13 +153,57 @@ router.put('/permalink', (res, req) => {
 router.get('/templates', (res, req) => {
     // let templateData = res.body.template
     let title = res.headers.pagetitle
-    let prefix = res.headers.prefix;
+    let prefix = res.headers.prefix.toLowerCase();
 
+    
     Template.findOne({'pageTitle': title, 'prefix': prefix}, (err, template) => {
         if(err){
             return res.status(500).send(err)
         }else{
-            res.res.status(200).send(template)
+            if(template){
+                Permalink.findOne({'pageTitle': title}, (err, permalink) => {
+                    if(err){
+                        return res.status(500).send(err)
+                    }else{
+                        let body_send = {
+                            'data': template,
+                            'permalink': permalink.permalink
+                        } 
+                        res.res.status(200).send(body_send)
+                    }
+                })
+                // res.res.status(200).send(template)
+            }else{
+                Permalink.findOne({'permalink': title}, (err, pageTitle) => {
+                    if(err){
+                        return res.status(500).send(err)
+                    }else{
+                        if(pageTitle){
+                            Template.findOne({'pageTitle': pageTitle.pageTitle, 'prefix': prefix}, (err, template) => {
+                                if(err){
+                                    return res.status(500).send(err)
+                                }else{
+                                    if(template){
+                                        let body_send = {
+                                            'data': template,
+                                            'permalink': title
+                                        } 
+                                        res.res.status(200).send(body_send)
+                                    }else{
+                                        let body_send = null;
+                                        res.res.status(200).send(body_send)
+                                    }
+                                }
+                            })
+                        }else{
+                            let body_send = null;
+                            res.res.status(200).send(body_send)
+                        }
+
+                    }
+                })
+            }
+        
         }
     })
 })
