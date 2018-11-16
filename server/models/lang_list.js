@@ -5,4 +5,4 @@ const langListSchemat = new Schema({
     langCode: String,
 })
 
-module.exports = mongoose.model('langCode', langListSchemat, 'languages_list')
+module.exports = mongoose.model('langCode', langListSchemat, 'langs_codes_collection')

@@ -8,7 +8,7 @@ const Template = require('../models/templates')
 const Permalink = require('../models/permalinks')
 const Lang_list = require('../models/lang_list')
 const NewsCollection = require('../models/news')
-const ArticlesCollection = require('../models/articles')
+// const ArticlesCollection = require('../models/articles')
 
 const mongoose = require('mongoose')
 const db = 'mongodb://antwerk:antwerk18@ds040309.mlab.com:40309/antwerkdb'
@@ -45,18 +45,24 @@ router.get('/article', (req, res) => {
 router.put('/article', (req, res) => {
     let lang = req.body.body.prefix;
     let id = req.body.body.id;
+    let category =  req.body.body.category;
     let template = req.body.body.template;    
-
+    let discription = req.body.body.discription;  
+    let title =  req.body.body.title;  
+    let image =  req.body.body.image;
+    let date =  req.body.body.date;
     let opts = {
         upsert: true,
         new: true
       };
 
-      ArticlesCollection.findOneAndUpdate({
+      NewsCollection.findOneAndUpdate({
         'prefix': lang,
         'id': id
     },
-    { $set: { template : template } }, opts, function(err, template){
+    { $set: { 'template' : template , 'discription': discription, 'category': category, 'title': title, 'image': image, 'date': date  } },
+     opts, 
+     function(err, template){
         if(err){
             console.log("Something wrong when updating data!"+ '</br>' + err);
         }else{
@@ -165,20 +171,34 @@ router.get('/templates', (res, req) => {
                     if(err){
                         return res.status(500).send(err)
                     }else{
-                        let body_send = {
-                            'data': template,
-                            'permalink': permalink.permalink
-                        } 
-                        res.res.status(200).send(body_send)
+                        Permalink.findOne({'permalink': title}, (err, pageTitle) => {
+                            if(err){
+                                return res.status(500).send(err)
+                            }else{
+                                  let permalink;
+                                  if(pageTitle){
+                                      permalink = pageTitle.permalink
+                                  }else{
+                                    permalink = title
+                                  }
+                                let body_send = {
+                                    'data': template,
+                                    'permalink': permalink
+                                }
+                                res.res.status(200).send(body_send)
+                            }
+                        })
                     }
                 })
+            }
                 // res.res.status(200).send(template)
-            }else{
+            else{
                 Permalink.findOne({'permalink': title}, (err, pageTitle) => {
                     if(err){
                         return res.status(500).send(err)
                     }else{
                         if(pageTitle){
+                            let gotObj = pageTitle;
                             Template.findOne({'pageTitle': pageTitle.pageTitle, 'prefix': prefix}, (err, template) => {
                                 if(err){
                                     return res.status(500).send(err)
@@ -190,7 +210,10 @@ router.get('/templates', (res, req) => {
                                         } 
                                         res.res.status(200).send(body_send)
                                     }else{
-                                        let body_send = null;
+                                        let body_send = {
+                                            'data': gotObj
+                                        }
+                                        
                                         res.res.status(200).send(body_send)
                                     }
                                 }

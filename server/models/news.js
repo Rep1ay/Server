@@ -9,6 +9,7 @@ const newsSchemat = new Schema({
     title: String,
     discription: String,
     date: String,
+    template: String
 })
 
 module.exports = mongoose.model('news_collection', newsSchemat, 'news')
