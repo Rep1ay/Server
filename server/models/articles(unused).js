@@ -7,7 +7,7 @@ const articlesSchemat = new Schema({
     category: String,
     title: String,
     prefix: String,
-    discription: String,
+    description: String,
     date: String,
     template: String
 })

@@ -7,7 +7,7 @@ const newsSchemat = new Schema({
     prefix: String,
     category: String,
     title: String,
-    discription: String,
+    description: String,
     date: String,
     template: String
 })

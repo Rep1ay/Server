@@ -8,6 +8,7 @@ const Template = require('../models/templates')
 const Permalink = require('../models/permalinks')
 const Lang_list = require('../models/lang_list')
 const NewsCollection = require('../models/news')
+const NewsCategory = require('../models/news_category')
 // const ArticlesCollection = require('../models/articles')
 
 const mongoose = require('mongoose')
@@ -29,13 +30,25 @@ router.get('/', (req, res) => {
     res.send('From API route')
 })
 
+router.get('/3_articles', (res, req) => {
+    let prefix = res.headers.prefix;
+
+    NewsCollection.find( { 'prefix': prefix }, { array: {$slice: 3 } }, (err, array) =>{
+        if(err){
+            return res.res.status(500).send(err)
+        }else{
+             res.res.status(200).send(array)
+        }
+    } );
+})
+
 router.get('/article', (req, res) => {
     let lang = req.headers.prefix;
     let id = req.headers.id;
 
     NewsCollection.findOne({'prefix': lang, 'id': id}, (err, template) => {
         if(err){
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }else{
              res.status(200).send(template)
         }
@@ -47,7 +60,7 @@ router.put('/article', (req, res) => {
     let id = req.body.body.id;
     let category =  req.body.body.category;
     let template = req.body.body.template;    
-    let discription = req.body.body.discription;  
+    let description = req.body.body.description;  
     let title =  req.body.body.title;  
     let image =  req.body.body.image;
     let date =  req.body.body.date;
@@ -60,7 +73,7 @@ router.put('/article', (req, res) => {
         'prefix': lang,
         'id': id
     },
-    { $set: { 'template' : template , 'discription': discription, 'category': category, 'title': title, 'image': image, 'date': date  } },
+    { $set: { 'template' : template , 'description': description, 'category': category, 'title': title, 'image': image, 'date': date  } },
      opts, 
      function(err, template){
         if(err){
@@ -78,9 +91,9 @@ router.get('/news', (req, res) => {
         res.status(200).send(news_collection)
         },
         (err) => {
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }
-    )  
+    )
 })
 
 router.get('/navbar', (req, res) => {
@@ -88,7 +101,7 @@ router.get('/navbar', (req, res) => {
 
     Navbar.findOne({'lang': lang}, (err, navbar) => {
         if(err){
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }else{
              res.status(200).send(navbar)
         }
@@ -103,7 +116,7 @@ router.get('/lang_list', (req, res) => {
             res.status(200).send(lang_list)
         },
         (err) => {
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }
     )   
 })
@@ -113,7 +126,7 @@ router.get('/pageTitle', (res, req) => {
 
     Permalink.findOne({'permalink': permalink}, (err, pageTitle) => {
         if(err){
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }else{
              res.res.status(200).send(pageTitle)
         }
@@ -126,7 +139,7 @@ router.get('/permalink', (res, req) => {
 
     Permalink.findOne({'pageTitle': title}, (err, permalink) => {
         if(err){
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }else{
             res.res.status(200).send(permalink)
         }
@@ -155,6 +168,38 @@ router.put('/permalink', (res, req) => {
     });
 })
 
+router.put('/news_category', (res, req) => {
+    let prefix = res.body.body.prefix 
+    let category =  res.body.body.category 
+
+    let opts = {
+        upsert: true,
+        new: true
+      };
+
+    NewsCategory.findOneAndUpdate({
+        'category' : category
+    },
+    { $set: { 'prefix' : prefix } }, opts, function(err, category){
+        if(err){
+            console.log("Something wrong when updating data!"+ '</br>' + err);
+        }else{
+            res.res.status(200).send(category)
+        }
+    });
+})
+
+router.get('/news_category', (req, res) => {
+    let prefix = req.headers.prefix
+    
+    NewsCategory.find({'prefix': prefix},(err, news_category_collection) => {
+        res.status(200).send(news_category_collection)
+        },
+        (err) => {
+            return res.res.status(500).send(err)
+        }
+    )
+})
 
 router.get('/templates', (res, req) => {
     // let templateData = res.body.template
@@ -164,16 +209,16 @@ router.get('/templates', (res, req) => {
     
     Template.findOne({'pageTitle': title, 'prefix': prefix}, (err, template) => {
         if(err){
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }else{
             if(template){
                 Permalink.findOne({'pageTitle': title}, (err, permalink) => {
                     if(err){
-                        return res.status(500).send(err)
+                        return res.res.status(500).send(err)
                     }else{
                         Permalink.findOne({'permalink': title}, (err, pageTitle) => {
                             if(err){
-                                return res.status(500).send(err)
+                                return res.res.status(500).send(err)
                             }else{
                                   let permalink;
                                   if(pageTitle){
@@ -194,14 +239,15 @@ router.get('/templates', (res, req) => {
                 // res.res.status(200).send(template)
             else{
                 Permalink.findOne({'permalink': title}, (err, pageTitle) => {
+                    let returnedTitle = title;
                     if(err){
-                        return res.status(500).send(err)
+                        return res.res.status(500).send(err)
                     }else{
                         if(pageTitle){
                             let gotObj = pageTitle;
                             Template.findOne({'pageTitle': pageTitle.pageTitle, 'prefix': prefix}, (err, template) => {
                                 if(err){
-                                    return res.status(500).send(err)
+                                    return res.res.status(500).send(err)
                                 }else{
                                     if(template){
                                         let body_send = {
@@ -219,7 +265,11 @@ router.get('/templates', (res, req) => {
                                 }
                             })
                         }else{
-                            let body_send = null;
+                            let body_send = {
+                                'data': {
+                                    'pageTitle': returnedTitle
+                                }
+                            }
                             res.res.status(200).send(body_send)
                         }
 
@@ -233,7 +283,7 @@ router.get('/templates', (res, req) => {
 
 router.put('/templates', (res, req) => {
     let templateData = res.body.body.template;
-    let prefix = res.body.body.prefix;
+    let prefix = res.body.body.prefix.toLowerCase();
     let title = res.body.body.pageTitle 
     let permalink =  res.body.body.permalink 
     let templateObj = new Template(res.body)
@@ -261,7 +311,7 @@ router.get('/lang_panel', (req, res) => {
             res.status(200).send(panel)
         },
         (err) => {
-            return res.status(500).send(err)
+            return res.res.status(500).send(err)
         }
     )   
 })
