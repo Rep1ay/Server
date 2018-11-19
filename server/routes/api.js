@@ -96,6 +96,19 @@ router.get('/news', (req, res) => {
     )
 })
 
+router.get('/news_by_category', (req, res) => {
+    let prefix = req.headers.prefix
+    let category = req.headers.category
+    
+    NewsCollection.find({'category': category,'prefix': prefix},(err, news_collection) => {
+        res.status(200).send(news_collection)
+        },
+        (err) => {
+            return res.res.status(500).send(err)
+        }
+    )
+})
+
 router.get('/navbar', (req, res) => {
     let lang = req.headers.lang
 
@@ -216,28 +229,34 @@ router.get('/templates', (res, req) => {
                     if(err){
                         return res.res.status(500).send(err)
                     }else{
-                        Permalink.findOne({'permalink': title}, (err, pageTitle) => {
+                        let sendPermalink;
+                        if(permalink){
                             if(err){
                                 return res.res.status(500).send(err)
                             }else{
-                                  let permalink;
-                                  if(pageTitle){
-                                      permalink = pageTitle.permalink
-                                  }else{
-                                    permalink = title
-                                  }
-                                let body_send = {
-                                    'data': template,
-                                    'permalink': permalink
-                                }
-                                res.res.status(200).send(body_send)
+                                sendPermalink = permalink.permalink
                             }
-                        })
+                        }else{
+                            Permalink.findOne({'permalink': title}, (err, pageTitle) => {
+                                if(err){
+                                    return res.res.status(500).send(err)
+                                }else{
+                                    if(pageTitle){
+                                        sendPermalink = pageTitle.permalink
+                                    }
+                                }
+                            })
+                        }
+                        
+                        let body_send = {
+                            'data': template,
+                            'permalink': sendPermalink
+                        }
+
+                        res.res.status(200).send(body_send)
                     }
                 })
-            }
-                // res.res.status(200).send(template)
-            else{
+            }else{
                 Permalink.findOne({'permalink': title}, (err, pageTitle) => {
                     let returnedTitle = title;
                     if(err){
@@ -265,18 +284,29 @@ router.get('/templates', (res, req) => {
                                 }
                             })
                         }else{
-                            let body_send = {
-                                'data': {
-                                    'pageTitle': returnedTitle
-                                }
-                            }
-                            res.res.status(200).send(body_send)
-                        }
+                            Permalink.findOne({'pageTitle': returnedTitle}, (err, permalink) => {
+                                let returnedPermalink = title;
+                                if(err){
+                                    return res.res.status(500).send(err)
+                                }else{
 
+                                    if(permalink){
+                                        returnedPermalink = permalink.permalink
+                                    }
+
+                                    let body_send = {
+                                        'data': {
+                                            'permalink': returnedPermalink,
+                                            'pageTitle': returnedTitle
+                                        }
+                                    }
+                                    res.res.status(200).send(body_send)
+                                }
+                            })
+                        }
                     }
                 })
             }
-        
         }
     })
 })
