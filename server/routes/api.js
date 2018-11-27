@@ -39,7 +39,7 @@ router.get('/3_articles', (res, req) => {
         }else{
              res.res.status(200).send(array)
         }
-    } );
+    } ).sort({_id:-1});
 })
 
 router.get('/article', (req, res) => {
@@ -93,7 +93,7 @@ router.get('/news', (req, res) => {
         (err) => {
             return res.res.status(500).send(err)
         }
-    )
+    ).sort({_id:-1});
 })
 
 router.get('/news_by_category', (req, res) => {
