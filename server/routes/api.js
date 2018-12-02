@@ -109,19 +109,7 @@ router.get('/news_by_category', (req, res) => {
     )
 })
 
-router.get('/navbar', (req, res) => {
-    let lang = req.headers.lang
 
-    Navbar.findOne({'lang': lang}, (err, navbar) => {
-        if(err){
-            return res.res.status(500).send(err)
-        }else{
-             res.status(200).send(navbar)
-        }
-    })
-})
-
-//  Place for navbar put
 
 router.get('/lang_list', (req, res) => {
     // let prefix = req.body.prefix
@@ -160,7 +148,20 @@ router.get('/permalink', (res, req) => {
 })
 
 
-router.put('/permalink', (res, req) => {
+router.put('/permalink', verifyToken, (res, req) => {
+
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if(err){
+            res.sendStatus(403);
+        }else{
+            res.json({
+                message: 'Permalink created',
+                authData
+            })
+            
+        }
+    })
+
     let title = res.body.pageTitle 
     let permalink =  res.body.permalink 
 
@@ -335,6 +336,44 @@ router.put('/templates', (res, req) => {
     });
 })
 
+router.put('/navbar_items', (res, req) => {
+
+    let prefix = res.body.prefix.toLowerCase();
+    let navBarItem = res.body.navBarItem 
+    let navBarItemLabel =  res.body.navBarItemLabel 
+
+    let opts = {
+        upsert: true,
+        new: true
+      };
+
+    Navbar.findOneAndUpdate({
+        prefix: prefix,
+        navBarItem : navBarItem
+    },
+    { $set: { navBarItemLabel : navBarItemLabel } }, opts, function(err, template){
+        if(err){
+            console.log("Something wrong when updating data!"+ '</br>' + err);
+        }else{
+            res.res.status(200).send(template)
+        }
+    });
+})
+
+router.get('/navbar_items', (req, res) => {
+    let prefix = req.headers.lang
+    // let navbarItem = req.headers.navbarItem
+
+    Navbar.find({'prefix': prefix}, (err, navbar) => {
+        if(err){
+            return res.res.status(500).send(err)
+        }else{
+             res.status(200).send(navbar)
+        }
+    })
+})
+
+
 router.get('/lang_panel', (req, res) => {
     // let prefix = req.body.prefix
     Language.find({},(err, panel) => {
@@ -355,11 +394,11 @@ router.put('/lang_panel', (req, res) => {
         };
 
         Language.findOneAndUpdate({
-            prefix: prefix
+            'prefix': prefix
         },
         { $set: { language: prefix } }, opts, function(err, lang){
             if(err){
-                console.log('Somthing went wrong wuth language' + '</br>' + err);
+                console.log('Somthing went wrong with language' + '</br>' + err);
             }else{
                 res.status(200).send(lang)
             }
@@ -392,32 +431,51 @@ router.post('/login', (req, res) => {
 
 router.post('/register', (req, res) => {
     let userData = req.body;
-    let user = new User(userData)
-    user.save((error, registeredUser) => {
-        if(error) {
-            console.log(error)
+    let userExemp = new User(userData)
+
+    User.find({email: userData.email}, (err, user) => {
+        if(user) {
+            return res.status(409).json({
+                message: 'User with this e-mail adress already exist!'
+            })
+        }else if(err){
+            return res.res.status(500).send(err)
         }else{
-            let payload = { subject: registeredUser._id }
-            let token = jwt.sign(payload, 'secretKey')
-            res.status(200).send({token})
+            // res.status(201).json({
+            //     message: 'User created'
+            // })
+            userExemp.save((error, registeredUser) => {
+                if(error) {
+                    console.log(error)
+                }else{
+                    let payload = { subject: registeredUser._id }
+                    let token = jwt.sign(payload, 'secretKey')
+                    res.status(200).send({token})
+                }
+            })
         }
     })
+    
 })
 
 function verifyToken(req, res, next){
-    if (!req.headers.autorization) {
+    const bearerHeader = req.headers['autorization']
+    if (!bearerHeader) {
         return res.status(401).send('Unauthorized request');
+    }else{
+        let token = bearerHeader.split(' ')[1];
+        if (token === 'null'){
+            return res.status(401).send('Unauthorized request');
+        }
+        next();
     }
-    let token = req.headers.autorization.split(' ')[1];
-    if (token === 'null'){
-        return res.status(401).send('Unauthorized request');
-    }
-    let payload = jwt.verify(token, 'secretKey');
-    if(!payload){
-        return res.status(401).send('Unauthorized request');
-    }
-    req.userId = payload.subject
-    next()
+  
+    // let payload = jwt.verify(token, 'secretKey');
+    // if(!payload){
+    //     return res.status(401).send('Unauthorized request');
+    // }
+    // req.userId = payload.subject
+    
 }
 // router.post('/discounts', (req, res) => { 
 //     let discountData = req.body;

@@ -2,7 +2,9 @@ const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema
 const navbarSchemat = new Schema({
-    promoCode: String,
+    prefix: String,
+    navBarItem: String,
+    navBarItemLabel: String,
 })
 
 module.exports = mongoose.model('navbar', navbarSchemat, 'navbar')
