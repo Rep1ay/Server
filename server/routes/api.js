@@ -57,7 +57,8 @@ router.get('/article', (req, res) => {
 
 router.put('/article', (req, res) => {
     let lang = req.body.body.prefix;
-    let id = req.body.body.id;
+    let newId = req.body.body.newId;
+    let oldId =  req.body.body.oldId;
     let category =  req.body.body.category;
     let template = req.body.body.template;    
     let description = req.body.body.description;  
@@ -71,9 +72,9 @@ router.put('/article', (req, res) => {
 
       NewsCollection.findOneAndUpdate({
         'prefix': lang,
-        'id': id
+        'id': oldId
     },
-    { $set: { 'template' : template , 'description': description, 'category': category, 'title': title, 'image': image, 'date': date  } },
+    { $set: { 'id': newId, 'template' : template , 'description': description, 'category': category, 'title': title, 'image': image, 'date': date  } },
      opts, 
      function(err, template){
         if(err){
