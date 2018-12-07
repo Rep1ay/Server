@@ -149,20 +149,7 @@ router.get('/permalink', (res, req) => {
 })
 
 
-router.put('/permalink', verifyToken, (res, req) => {
-
-    jwt.verify(req.token, 'secretkey', (err, authData) => {
-        if(err){
-            res.sendStatus(403);
-        }else{
-            res.json({
-                message: 'Permalink created',
-                authData
-            })
-            
-        }
-    })
-
+router.put('/permalink', (res, req) => {
     let title = res.body.pageTitle 
     let permalink =  res.body.permalink 
 
